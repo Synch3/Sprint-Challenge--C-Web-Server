@@ -81,7 +81,21 @@ int send_request(int fd, char *hostname, char *port, char *path)
   // IMPLEMENT ME! //
   ///////////////////
 
-  return 0;
+    int request_length = snprintf(request, max_request_size,
+    "GET /%s HTTP/1.1\n"
+    "Host: %s:%s\n"
+    "Connection: close \n"
+    "\n",
+    path, hostname, port); 
+
+    int rv = send(fd, request, request_length, 0);
+    printf("%s", request);
+    if (rv < 0) {
+        perror("send");
+    }
+
+  return rv;
+
 }
 
 int main(int argc, char *argv[])
@@ -105,6 +119,22 @@ int main(int argc, char *argv[])
   ///////////////////
   // IMPLEMENT ME! //
   ///////////////////
+
+  struct urlinfo_t *parsed_url;
+  
+  parsed_url = parse_url(argv[1]);
+  sockfd = get_socket(parsed_url->hostname, parsed_url->port);
+
+  int request = send_request(sockfd, parsed_url->hostname, parsed_url->port,parsed_url->path);
+  
+  while ((numbytes = recv(sockfd, buf, BUFSIZE - 1, 0)) > 0)
+  {
+    fprintf( stdout, "%s\n", buf);
+  }
+  
+  free(parsed_url);
+
+  close(sockfd);
 
   return 0;
 }
